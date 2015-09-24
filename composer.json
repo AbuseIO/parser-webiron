@@ -8,15 +8,10 @@
     "license": "GPL-2.0",
     "authors": [
         {
-            "name": "Dennis Krul",
-            "email": "dennis@tilaa.com",
-            "role": "Developer"
-        },
-        {
-            "name": "Mark Stunnenberg",
-            "email": "mark@e-rave.nl",
-            "homepage": "http://e-rave.nl",
-            "role": "Developer"
+            "name": "AbuseIO Foundation",
+            "email": "dev@abuse.io",
+            "homepage": "http://abuse.io",
+            "role": "Lead"
         }
     ],
     "support": {
