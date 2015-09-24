@@ -1,9 +1,38 @@
 {
     "name": "abuseio/parser-webiron",
     "description": "Parser addon for handling notifications from webiron",
+    "version": "1.0.0-dev",
+    "keywords": ["laravel", "abuseio", "parser", "webiron"],
+    "homepage": "http://abuse.io",
+    "type": "library",
     "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Dennis Krul",
+            "email": "dennis@tilaa.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Mark Stunnenberg",
+            "email": "mark@e-rave.nl",
+            "homepage": "http://e-rave.nl",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "dev@abuse.io",
+        "issues": "https://github.com/AbuseIO/parser-webiron/issues",
+        "irc": "irc://irc.freenode.net/abuseio",
+        "source": "https://github.com/AbuseIO/parser-webiron",
+        "docs": "https://abuse.io/resources/documentation/"
+    },
     "require": {
         "php": ">=5.4.0",
         "abuseio/parser-common": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "AbuseIO\\Parser\\Webiron\\": "src/"
+        }
     }
 }
