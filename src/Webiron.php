@@ -64,7 +64,7 @@ class Webiron extends Parser
             $report = $attachment->getContent();
 
             preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $report, $match);
-            $row = array_combine($match[1], $match[2]);
+            $row = array_combine($match[1], array_map('trim', $match[2]));
 
             if (empty($row['Report-Type'])) {
                 return $this->failed(
