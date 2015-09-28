@@ -56,69 +56,96 @@ class Webiron extends Parser
 
         // We found an ARF report, yay!
         if (!empty($raw_report)) {
-            preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $match);
-            $report = array_combine($match[1], array_map('trim', $match[2]));
+            preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $matches);
+            $report = array_combine($matches[1], array_map('trim', $matches[2]));
+
             if (empty($report['Report-Type'])) {
                 return $this->failed(
                     "Unabled to detect feed because of required field Report-Type is missing"
                 );
             }
 
-            $feedName = $report['Report-Type'];
+            $this->feedName = $report['Report-Type'];
 
-            // If feed is known and enabled, validate data and save report
-            if ($this->isKnownFeed($feedName) && $this->isEnabledFeed($feedName)) {
-                // Sanity checks (skip if required fields are unset)
-                if ($this->hasRequiredFields($feedName, $report) === true) {
-                    $events[] = [
-                        'source'        => config("{$this->configBase}.parser.name"),
-                        'ip'            => $report['Source'],
-                        'domain'        => false,
-                        'uri'           => false,
-                        'class'         => config("{$this->configBase}.feeds.{$feedName}.class"),
-                        'type'          => config("{$this->configBase}.feeds.{$feedName}.type"),
-                        'timestamp'     => strtotime(str_replace('\'', '', $report['Date'])),
-                        'information'   => json_encode($report),
-                    ];
-                } else {
-                    return $this->failed(
-                        "Required field {$this->requiredField} is missing in the report or config is incorrect."
-                    );
-                }
-            } else {
+            if (!$this->isKnownFeed()) {
                 return $this->failed(
-                    "Detected feed '{$feedName}' is unknown or disabled."
+                    "Detected feed {$this->feedName} is unknown."
                 );
             }
+
+            if (!$this->isEnabledFeed()) {
+                return $this->success($events);
+            }
+
+            if (!$this->hasRequiredFields($report)) {
+                return $this->failed(
+                    "Required field {$this->requiredField} is missing or the config is incorrect."
+                );
+            }
+
+            $report = $this->applyFilters($report);
+
+            // Fix for report date
+            $report['Date'] = strtotime(str_replace('\'', '', $report['Date']));
+
+            $events[] = [
+                'source'        => config("{$this->configBase}.parser.name"),
+                'ip'            => $report['Source'],
+                'domain'        => false,
+                'uri'           => false,
+                'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
+                'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
+                'timestamp'     => strtotime($report['Date']),
+                'information'   => json_encode($report),
+            ];
 
         } else {
             // Didn't find an ARF report, go scrape the email body!
             $body = $this->parsedMail->getMessageBody();
-            $feedName = 'botnet-infection';
+            $this->feedName = 'botnet-infection';
 
-            preg_match_all('/  - ([^:]+): ([^\n]+)\n/', $body, $match);
-            $report = array_combine($match[1], array_map('trim', $match[2]));
+            if (!$this->isKnownFeed()) {
+                return $this->failed(
+                    "Detected feed {$this->feedName} is unknown."
+                );
+            }
+
+            if (!$this->isEnabledFeed()) {
+                return $this->success($events);
+            }
+
+            preg_match_all('/  - ([^:]+): ([^\n]+)\n/', $body, $matches);
+            $report = array_combine($matches[1], array_map('trim', $matches[2]));
 
             // Get IP address
-            preg_match('/Offending\/Source IP:[ ]+([0-9\.]+)\n/', $body, $match);
-            $report['Source'] = $match[1];
-
-            // If feed is known and enabled, validate data and save report
-            if ($this->isKnownFeed($feedName) && $this->isEnabledFeed($feedName)) {
-                // Sanity checks (skip if required fields are unset)
-                if ($this->hasRequiredFields($feedName, $report) === true) {
-                    $events[] = [
-                        'source'        => config("{$this->configBase}.parser.name"),
-                        'ip'            => $report['Source'],
-                        'domain'        => false,
-                        'uri'           => false,
-                        'class'         => config("{$this->configBase}.feeds.{$feedName}.class"),
-                        'type'          => config("{$this->configBase}.feeds.{$feedName}.type"),
-                        'timestamp'     => strtotime($report['Time']),
-                        'information'   => json_encode($report),
-                    ];
-                }
+            preg_match(
+                '/(?:Offending|Source) IP:[ ]+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\n/',
+                $body,
+                $matches
+            );
+            if (count($matches) == 2 && empty($report['ip'])) {
+                $report['ip'] = $matches[1];
             }
+
+            if (!$this->hasRequiredFields($report)) {
+                return $this->failed(
+                    "Required field {$this->requiredField} is missing or the config is incorrect."
+                );
+            }
+
+            $report = $this->applyFilters($report);
+
+            $events[] = [
+                'source'        => config("{$this->configBase}.parser.name"),
+                'ip'            => $report['ip'],
+                'domain'        => false,
+                'uri'           => false,
+                'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
+                'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
+                'timestamp'     => strtotime($report['Time']),
+                'information'   => json_encode($report),
+            ];
+
         }
 
         return $this->success($events);

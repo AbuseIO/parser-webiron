@@ -28,7 +28,7 @@ return [
             'type'      => 'Abuse',
             'enabled'   => true,
             'fields'    => [
-                'Source',
+                'ip',
                 'Time',
             ],
         ],
