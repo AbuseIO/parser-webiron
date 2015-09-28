@@ -23,5 +23,14 @@ return [
                 'Date',
             ],
         ],
+        'botnet-infection' => [
+            'class'     => 'Botnet infection',
+            'type'      => 'Abuse',
+            'enabled'   => true,
+            'fields'    => [
+                'Source',
+                'Time',
+            ],
+        ],
     ],
 ];

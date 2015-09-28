@@ -40,18 +40,24 @@ class Webiron extends Parser
         // Define array where all events are going to be saved in.
         $events = [ ];
 
+        /**
+         *  Try to find ARF report.
+         *  Some notification emails do not contain an ARF report. Instead they
+         *  contain a 'table row'-ish with abuse info. In that case we jump down
+         *  and parse the email body.
+         */
         foreach ($this->parsedMail->getAttachments() as $attachment) {
             // Only use the Webiron formatted reports, skip all others
-            // Format described here: https://www.webiron.com/arf/malware-attack.json
             if (!preg_match(config("{$this->configBase}.parser.report_file"), $attachment->filename)) {
-                continue;
+                $raw_report = $attachment->getContent();
+                break;
             }
+        }
 
-            $report = $attachment->getContent();
-
-            preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $report, $match);
+        // We found an ARF report, yay!
+        if (!empty($raw_report)) {
+            preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $match);
             $report = array_combine($match[1], array_map('trim', $match[2]));
-
             if (empty($report['Report-Type'])) {
                 return $this->failed(
                     "Unabled to detect feed because of required field Report-Type is missing"
@@ -84,7 +90,37 @@ class Webiron extends Parser
                     "Detected feed '{$feedName}' is unknown or disabled."
                 );
             }
-            return $this->success($events);
+
+        } else {
+            // Didn't find an ARF report, go scrape the email body!
+            $body = $this->parsedMail->getMessageBody();
+            $feedName = 'botnet-infection';
+
+            preg_match_all('/  - ([^:]+): ([^\n]+)\n/', $body, $match);
+            $report = array_combine($match[1], array_map('trim', $match[2]));
+
+            // Get IP address
+            preg_match('/Offending\/Source IP:[ ]+([0-9\.]+)\n/', $body, $match);
+            $report['Source'] = $match[1];
+
+            // If feed is known and enabled, validate data and save report
+            if ($this->isKnownFeed($feedName) && $this->isEnabledFeed($feedName)) {
+                // Sanity checks (skip if required fields are unset)
+                if ($this->hasRequiredFields($feedName, $report) === true) {
+                    $events[] = [
+                        'source'        => config("{$this->configBase}.parser.name"),
+                        'ip'            => $report['Source'],
+                        'domain'        => false,
+                        'uri'           => false,
+                        'class'         => config("{$this->configBase}.feeds.{$feedName}.class"),
+                        'type'          => config("{$this->configBase}.feeds.{$feedName}.type"),
+                        'timestamp'     => strtotime($report['Time']),
+                        'information'   => json_encode($report),
+                    ];
+                }
+            }
         }
+
+        return $this->success($events);
     }
 }
