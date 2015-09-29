@@ -17,6 +17,7 @@ class Webiron extends Parser
     {
         $this->parsedMail = $parsedMail;
         $this->arfMail = $arfMail;
+        $this->warningCount = 0;
     }
 
     /**
