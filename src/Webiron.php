@@ -17,7 +17,6 @@ class Webiron extends Parser
     {
         $this->parsedMail = $parsedMail;
         $this->arfMail = $arfMail;
-        $this->warningCount = 0;
     }
 
     /**
@@ -37,9 +36,6 @@ class Webiron extends Parser
             $this->parsedMail->getHeader('subject') . "' arrived at parser: " .
             config("{$this->configBase}.parser.name")
         );
-
-        // Define array where all events are going to be saved in.
-        $events = [ ];
 
         /**
          *  Try to find ARF report.
@@ -76,7 +72,7 @@ class Webiron extends Parser
                         // Event has all requirements met, filter and add!
                         $report = $this->applyFilters($report);
 
-                        $events[] = [
+                        $this->events[] = [
                             'source'        => config("{$this->configBase}.parser.name"),
                             'ip'            => $report['Source'],
                             'domain'        => false,
@@ -115,7 +111,7 @@ class Webiron extends Parser
                     // Event has all requirements met, filter and add!
                     $report = $this->applyFilters($report);
 
-                    $events[] = [
+                    $this->events[] = [
                         'source'        => config("{$this->configBase}.parser.name"),
                         'ip'            => $report['ip'],
                         'domain'        => false,
@@ -129,6 +125,6 @@ class Webiron extends Parser
             }
         }
 
-        return $this->success($events);
+        return $this->success();
     }
 }
