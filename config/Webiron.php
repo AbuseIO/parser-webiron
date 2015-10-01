@@ -21,6 +21,7 @@ return [
             'fields'    => [
                 'Source',
                 'Date',
+                'Report-Type',
             ],
         ],
         'botnet-infection' => [

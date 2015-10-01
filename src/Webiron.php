@@ -7,16 +7,12 @@ use Log;
 
 class Webiron extends Parser
 {
-    public $parsedMail;
-    public $arfMail;
-
     /**
      * Create a new Webiron instance
      */
     public function __construct($parsedMail, $arfMail)
     {
-        $this->parsedMail = $parsedMail;
-        $this->arfMail = $arfMail;
+        parent::__construct($parsedMail, $arfMail);
     }
 
     /**
@@ -43,50 +39,49 @@ class Webiron extends Parser
          *  contain a 'table row'-ish with abuse info. In that case we jump down
          *  and parse the email body.
          */
+        $foundArf = false;
         foreach ($this->parsedMail->getAttachments() as $attachment) {
             // Only use the Webiron formatted reports, skip all others
-            if (!preg_match(config("{$this->configBase}.parser.report_file"), $attachment->filename)) {
+            if (preg_match(config("{$this->configBase}.parser.report_file"), $attachment->filename)) {
                 $raw_report = $attachment->getContent();
-                break;
-            }
-        }
 
-        // We found an ARF report, yay!
-        if (!empty($raw_report)) {
-            preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $matches);
-            $report = array_combine($matches[1], array_map('trim', $matches[2]));
+                // We found an ARF report, yay!
+                if (!empty($raw_report)) {
+                    $foundArf = true;
 
-            if (empty($report['Report-Type'])) {
-                return $this->failed(
-                    "Unabled to detect feed because of required field Report-Type is missing"
-                );
-            }
+                    preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $matches);
+                    $report = array_combine($matches[1], array_map('trim', $matches[2]));
 
-            if (!empty($report['Report-Type'])) {
-                $this->feedName = $report['Report-Type'];
+                    if (!empty($report['Report-Type'])) {
+                        $this->feedName = $report['Report-Type'];
 
-                // If feed is known and enabled, validate data and save report
-                if ($this->isKnownFeed() && $this->isEnabledFeed()) {
-                    // Sanity check
-                    if ($this->hasRequiredFields($report) === true) {
-                        // Event has all requirements met, filter and add!
-                        $report = $this->applyFilters($report);
+                        // If feed is known and enabled, validate data and save report
+                        if ($this->isKnownFeed() && $this->isEnabledFeed()) {
+                            // Sanity check
+                            if ($this->hasRequiredFields($report) === true) {
+                                // Event has all requirements met, filter and add!
+                                $report = $this->applyFilters($report);
 
-                        $this->events[] = [
-                            'source'        => config("{$this->configBase}.parser.name"),
-                            'ip'            => $report['Source'],
-                            'domain'        => false,
-                            'uri'           => false,
-                            'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
-                            'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
-                            'timestamp'     => strtotime(str_replace('\'', '', $report['Date'])),
-                            'information'   => json_encode($report),
-                        ];
+                                $this->events[] = [
+                                    'source'        => config("{$this->configBase}.parser.name"),
+                                    'ip'            => $report['Source'],
+                                    'domain'        => false,
+                                    'uri'           => false,
+                                    'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
+                                    'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
+                                    'timestamp'     => strtotime(str_replace('\'', '', $report['Date'])),
+                                    'information'   => json_encode($report),
+                                ];
+                            }
+                        }
+                    } else {
+                        $this->warningCount++;
                     }
                 }
             }
+        }
 
-        } else {
+        if ($foundArf === false) {
             // Didn't find an ARF report, go scrape the email body!
             $body = $this->parsedMail->getMessageBody();
             $this->feedName = 'botnet-infection';
