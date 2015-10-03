@@ -26,7 +26,6 @@ class Webiron extends Parser
          *  and parse the email body.
          */
         $foundArf = false;
-
         foreach ($this->parsedMail->getAttachments() as $attachment) {
             // Only use the Webiron formatted reports, skip all others
             if (preg_match(config("{$this->configBase}.parser.report_file"), $attachment->filename)) {
@@ -36,12 +35,12 @@ class Webiron extends Parser
                 if (!empty($raw_report)) {
                     $foundArf = true;
 
-                    if (preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $matches)) {
-                        $report = array_combine($matches[1], array_map('trim', $matches[2]));
-                    } else {
+                    if (!preg_match_all('/([\w\-]+): (.*)[ ]*\r?\n/', $raw_report, $matches)) {
                         $this->warningCount++;
                         continue;
                     }
+
+                    $report = array_combine($matches[1], array_map('trim', $matches[2]));
 
                     if (!empty($report['Report-Type'])) {
                         $this->feedName = $report['Report-Type'];
@@ -82,14 +81,18 @@ class Webiron extends Parser
                 if (preg_match_all('/  - ([^:]+): ([^\n]+)\n/', $body, $matches)) {
                     $report = array_combine($matches[1], array_map('trim', $matches[2]));
 
-                    // Get IP address
-                    preg_match(
-                        '/(?:Offending|Source) IP:[ ]+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\n/',
-                        $body,
-                        $matches
-                    );
-                    if (count($matches) == 2 && empty($report['ip'])) {
-                        $report['ip'] = $matches[1];
+                    // Get IP address is not in the report
+                    if (empty($report['ip'])) {
+                        if (!preg_match(
+                            '/(?:Offending|Source) IP:[ ]+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\n/',
+                            $body,
+                            $matches
+                        )
+                        ) {
+                            $this->warningCount++;
+                        } else {
+                            $report['ip'] = $matches[1];
+                        }
                     }
 
                     // Sanity check
