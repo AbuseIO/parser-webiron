@@ -103,7 +103,7 @@ class Webiron extends Parser
                             $this->warningCount++;
                         }
                     }
-                    dd($report);
+
                     // Sanity check
                     if ($this->hasRequiredFields($report) === true) {
                         // Event has all requirements met, filter and add!
