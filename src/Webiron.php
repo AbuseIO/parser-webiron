@@ -83,18 +83,27 @@ class Webiron extends Parser
 
                     // Get IP address is not in the report
                     if (empty($report['ip'])) {
-                        if (!preg_match(
+                        if (preg_match(
                             '/(?:Offending|Source) IP:[ ]+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\n/',
                             $body,
                             $matches
-                        )
-                        ) {
-                            $this->warningCount++;
-                        } else {
+                        )) {
                             $report['ip'] = $matches[1];
+                        } elseif (preg_match(
+                            '/(?:Offending|Source) IP:[ ]+(?>(?>([a-f0-9]{1,4})(?>:(?1)){7}|'.
+                            '(?!(?:.*[a-f0-9](?>:|$)){8,})((?1)(?>:(?1)){0,6})?::(?2)?)|(?>('.
+                            '?>(?1)(?>:(?1)){5}:|(?!(?:.*[a-f0-9]:){6,})(?3)?::(?>((?1)(?>:('.
+                            '?1)){0,4}):)?)?(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?>\.(?4)){3}))/',
+                            $body,
+                            $matches
+                        )) {
+                            $matches = explode('IP:', $matches[0]);
+                            $report['ip'] = trim($matches[1]);
+                        } else {
+                            $this->warningCount++;
                         }
                     }
-
+                    dd($report);
                     // Sanity check
                     if ($this->hasRequiredFields($report) === true) {
                         // Event has all requirements met, filter and add!

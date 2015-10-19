@@ -20,8 +20,6 @@ return [
             'enabled'   => true,
             'fields'    => [
                 'Source',
-                'Date',
-                'Report-Type',
             ],
         ],
         'botnet-infection' => [
@@ -30,7 +28,6 @@ return [
             'enabled'   => true,
             'fields'    => [
                 'ip',
-                'Time',
             ],
         ],
     ],
