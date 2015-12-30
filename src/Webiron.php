@@ -2,10 +2,17 @@
 
 namespace AbuseIO\Parsers;
 
+/**
+ * Class Webiron
+ * @package AbuseIO\Parsers
+ */
 class Webiron extends Parser
 {
     /**
      * Create a new Webiron instance
+     *
+     * @param \PhpMimeMailParser\Parser $parsedMail phpMimeParser object
+     * @param array $arfMail array with ARF detected results
      */
     public function __construct($parsedMail, $arfMail)
     {
@@ -14,7 +21,7 @@ class Webiron extends Parser
 
     /**
      * Parse attachments
-     * @return Array    Returns array with failed or success data
+     * @return array    Returns array with failed or success data
      *                  (See parser-common/src/Parser.php) for more info.
      */
     public function parse()
