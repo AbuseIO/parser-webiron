@@ -1,6 +1,7 @@
 <?php
 
 namespace AbuseIO\Parsers;
+use AbuseIO\Models\Incident;
 
 /**
  * Class Webiron
@@ -59,16 +60,19 @@ class Webiron extends Parser
                                 // Event has all requirements met, filter and add!
                                 $report = $this->applyFilters($report);
 
-                                $this->events[] = [
-                                    'source'        => config("{$this->configBase}.parser.name"),
-                                    'ip'            => $report['Source'],
-                                    'domain'        => false,
-                                    'uri'           => false,
-                                    'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
-                                    'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
-                                    'timestamp'     => strtotime(str_replace('\'', '', $report['Date'])),
-                                    'information'   => json_encode($report),
-                                ];
+                                $incident = new Incident();
+
+                                $incident->source      = config("{$this->configBase}.parser.name");
+                                $incident->source_id   = false;
+                                $incident->ip          = $report['Source'];
+                                $incident->domain      = false;
+                                $incident->uri         = false;
+                                $incident->class       = config("{$this->configBase}.feeds.{$this->feedName}.class");
+                                $incident->type        = config("{$this->configBase}.feeds.{$this->feedName}.type");
+                                $incident->timestamp   = strtotime(str_replace('\'', '', $report['Date']));
+                                $incident->information = json_encode($report);
+
+                                $this->events[] = $incident;
                             }
                         }
                     } else {
@@ -116,16 +120,20 @@ class Webiron extends Parser
                         // Event has all requirements met, filter and add!
                         $report = $this->applyFilters($report);
 
-                        $this->events[] = [
-                            'source'        => config("{$this->configBase}.parser.name"),
-                            'ip'            => $report['ip'],
-                            'domain'        => false,
-                            'uri'           => false,
-                            'class'         => config("{$this->configBase}.feeds.{$this->feedName}.class"),
-                            'type'          => config("{$this->configBase}.feeds.{$this->feedName}.type"),
-                            'timestamp'     => strtotime($report['Time']),
-                            'information'   => json_encode($report),
-                        ];
+                        $incident = new Incident();
+
+                        $incident->source      = config("{$this->configBase}.parser.name");
+                        $incident->source_id   = false;
+                        $incident->ip          = $report['ip'];
+                        $incident->domain      = false;
+                        $incident->uri         = false;
+                        $incident->class       = config("{$this->configBase}.feeds.{$this->feedName}.class");
+                        $incident->type        = config("{$this->configBase}.feeds.{$this->feedName}.type");
+                        $incident->timestamp   = strtotime($report['Time']);
+                        $incident->information = json_encode($report);
+
+                        $this->events[] = $incident;
+
                     }
                 } else {
                     $this->warningCount++;
