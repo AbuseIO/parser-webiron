@@ -1,6 +1,7 @@
 <?php
 
 namespace AbuseIO\Parsers;
+
 use AbuseIO\Models\Incident;
 
 /**
@@ -57,7 +58,7 @@ class Webiron extends Parser
                         if ($this->isKnownFeed() && $this->isEnabledFeed()) {
                             // Sanity check
                             if ($this->hasRequiredFields($report) === true) {
-                                // Event has all requirements met, filter and add!
+                                // incident has all requirements met, filter and add!
                                 $report = $this->applyFilters($report);
 
                                 $incident = new Incident();
@@ -72,7 +73,7 @@ class Webiron extends Parser
                                 $incident->timestamp   = strtotime(str_replace('\'', '', $report['Date']));
                                 $incident->information = json_encode($report);
 
-                                $this->events[] = $incident;
+                                $this->incidents[] = $incident;
                             }
                         }
                     } else {
@@ -117,7 +118,7 @@ class Webiron extends Parser
 
                     // Sanity check
                     if ($this->hasRequiredFields($report) === true) {
-                        // Event has all requirements met, filter and add!
+                        // incident has all requirements met, filter and add!
                         $report = $this->applyFilters($report);
 
                         $incident = new Incident();
@@ -132,7 +133,7 @@ class Webiron extends Parser
                         $incident->timestamp   = strtotime($report['Time']);
                         $incident->information = json_encode($report);
 
-                        $this->events[] = $incident;
+                        $this->incidents[] = $incident;
 
                     }
                 } else {
