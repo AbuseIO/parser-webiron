@@ -15,7 +15,7 @@ return [
 
     'feeds' => [
         'web-attack' => [
-            'class'     => 'DDoS sending Server',
+            'class'     => 'DDOS_SENDING_SERVER',
             'type'      => 'Abuse',
             'enabled'   => true,
             'fields'    => [
@@ -23,7 +23,7 @@ return [
             ],
         ],
         'botnet-infection' => [
-            'class'     => 'Botnet infection',
+            'class'     => 'BOTNET_INFECTION',
             'type'      => 'Abuse',
             'enabled'   => true,
             'fields'    => [
