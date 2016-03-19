@@ -67,7 +67,6 @@ class Webiron extends Parser
                                 $incident->source_id   = false;
                                 $incident->ip          = $report['Source'];
                                 $incident->domain      = false;
-                                $incident->uri         = false;
                                 $incident->class       = config("{$this->configBase}.feeds.{$this->feedName}.class");
                                 $incident->type        = config("{$this->configBase}.feeds.{$this->feedName}.type");
                                 $incident->timestamp   = strtotime(str_replace('\'', '', $report['Date']));
@@ -127,7 +126,6 @@ class Webiron extends Parser
                         $incident->source_id   = false;
                         $incident->ip          = $report['ip'];
                         $incident->domain      = false;
-                        $incident->uri         = false;
                         $incident->class       = config("{$this->configBase}.feeds.{$this->feedName}.class");
                         $incident->type        = config("{$this->configBase}.feeds.{$this->feedName}.type");
                         $incident->timestamp   = strtotime($report['Time']);
